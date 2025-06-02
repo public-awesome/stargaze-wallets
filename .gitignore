@@ -1,0 +1,4 @@
+node_modules/
+wallets.csv
+output.csv
+.DS_Store

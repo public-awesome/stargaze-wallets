@@ -1,0 +1,15 @@
+{
+  "name": "stargaze-to-cosmos",
+  "version": "1.0.0",
+  "description": "Convert Stargaze addresses to Cosmos Hub addresses",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "check-balances": "node check-balances.js"
+  },
+  "dependencies": {
+    "bech32": "^2.0.0",
+    "csv-parser": "^3.0.0",
+    "csv-writer": "^1.6.0"
+  }
+}
