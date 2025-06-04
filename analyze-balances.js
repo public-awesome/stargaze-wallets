@@ -19,6 +19,7 @@ let stargazeAccountsWithBalance = new Set();
 let cosmosAccountsWithBalance = new Set();
 let stargazeAccountsStaking = new Set();
 let stargazeAccountsWithBalanceOrStaking = new Set();
+let stargazeAccountsWithBalanceAndStaking = new Set();
 
 // Process each line
 dataLines.forEach(line => {
@@ -32,6 +33,11 @@ dataLines.forEach(line => {
         stargazeAccountsWithBalance.add(stargazeAddress);
         cosmosAccountsWithBalance.add(cosmosAddress);
         stargazeAccountsWithBalanceOrStaking.add(stargazeAddress);
+        
+        // Track if this account with balance is also staking
+        if (isStaking === 'Yes') {
+            stargazeAccountsWithBalanceAndStaking.add(stargazeAddress);
+        }
     } else if (balanceNum > 0) {
         accountsWithDustBalance++;
     } else {
@@ -63,8 +69,8 @@ const percentWithNoHubActivity = ((accountsWithNoHubActivity / totalAccounts) * 
 const overlapCount = stargazeAccountsWithBalance.size;
 const overlapPercent = ((overlapCount / totalAccounts) * 100).toFixed(2);
 
-// Calculate staking percentage among accounts with balance
-const stakingAmongHubAccounts = accountsWithBalance > 0 ? ((accountsStaking / accountsWithBalance) * 100).toFixed(2) : '0.00';
+// Calculate staking percentage among accounts with balance (correct calculation)
+const stakingAmongHubAccounts = accountsWithBalance > 0 ? ((stargazeAccountsWithBalanceAndStaking.size / accountsWithBalance) * 100).toFixed(2) : '0.00';
 
 // Output results with emphasis on Stargaze accounts not on Hub
 console.log('=== STARGAZE ACCOUNTS NOT REPRESENTED ON COSMOS HUB ===');
