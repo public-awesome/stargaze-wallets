@@ -3,11 +3,13 @@ const csv = require('csv-parser');
 const { createObjectCsvWriter } = require('csv-writer');
 const https = require('https');
 
-// Multiple API endpoints for load balancing
+// Multiple API endpoints for load balancing (all tested and verified working)
 const API_ENDPOINTS = [
   'https://lcd-cosmoshub.keplr.app',
-  'https://cosmos-rest.publicnode.com',
-  'https://rest-cosmoshub.ecostake.com'
+  'https://cosmos-rest.publicnode.com', 
+  'https://rest-cosmoshub.ecostake.com',
+  'https://rest.cosmos.directory/cosmoshub',
+  'https://cosmos-api.polkachu.com'
 ];
 
 let currentEndpointIndex = 0;
@@ -168,7 +170,7 @@ async function processAddresses() {
   
   let totalProcessed = 0;
   // Process addresses in larger batches since we're load balancing across multiple endpoints
-  const batchSize = 9; // 3 endpoints * 3 requests per endpoint
+  const batchSize = 20; // 5 endpoints * 4 requests per endpoint for better parallelization
   for (let i = 0; i < addresses.length; i += batchSize) {
     const batch = addresses.slice(i, i + batchSize);
     const batchResults = [];
@@ -200,10 +202,10 @@ async function processAddresses() {
     totalProcessed += batchResults.length;
     console.log(`Processed ${totalProcessed} of ${addresses.length} addresses - batch written to hub.csv`);
     
-    // Reduced delay since we're distributing load across multiple endpoints
+    // Minimal delay since we're distributing load across 5 endpoints
     if (i + batchSize < addresses.length) {
-      console.log('Waiting 1 second before processing next batch...');
-      await sleep(1000);
+      console.log('Waiting 0.5 seconds before processing next batch...');
+      await sleep(500);
     }
   }
   
