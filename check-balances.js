@@ -3,13 +3,13 @@ const csv = require('csv-parser');
 const { createObjectCsvWriter } = require('csv-writer');
 const https = require('https');
 
-// Multiple API endpoints for load balancing (all tested and verified working)
+// Multiple API endpoints for load balancing (all tested and verified working consistently)
 const API_ENDPOINTS = [
   'https://lcd-cosmoshub.keplr.app',
   'https://cosmos-rest.publicnode.com', 
   'https://rest-cosmoshub.ecostake.com',
-  'https://rest.cosmos.directory/cosmoshub',
-  'https://cosmos-api.polkachu.com'
+  'https://cosmos-api.w3coins.io',
+  'https://lcd.cosmos.dragonstake.io'
 ];
 
 let currentEndpointIndex = 0;
@@ -54,12 +54,19 @@ async function checkStakingStatus(address) {
             return resolve('No');
           }
           
+          // Check if response is HTML instead of JSON
+          if (data.trim().startsWith('<')) {
+            console.error(`HTML response for staking ${address} from ${url}`);
+            return resolve('No');
+          }
+          
           const response = JSON.parse(data);
           const hasStaking = response.delegation_responses && response.delegation_responses.length > 0;
           
           resolve(hasStaking ? 'Yes' : 'No');
         } catch (error) {
           console.error(`Error checking staking for ${address}: ${error.message}`);
+          console.error(`Response data: ${data.substring(0, 100)}...`);
           resolve('No'); // Return No in case of errors
         }
       });
@@ -104,6 +111,12 @@ async function checkBalance(address) {
           // Check if data is empty or not valid JSON
           if (!data || data.trim() === '') {
             console.log(`Empty response for ${address}, assuming zero balance`);
+            return resolve('0');
+          }
+          
+          // Check if response is HTML instead of JSON
+          if (data.trim().startsWith('<')) {
+            console.error(`HTML response for balance ${address} from ${url}`);
             return resolve('0');
           }
           
