@@ -45,6 +45,12 @@ fs.createReadStream('sg-6-month-addresses-tx-count.csv')
     const stargazeAddress = row.address;
     const txCount = row.tx_count;
     
+    // Skip empty or invalid addresses
+    if (!stargazeAddress || stargazeAddress.trim() === '') {
+      console.log(`Skipping empty address with tx_count: ${txCount}`);
+      return;
+    }
+    
     // Convert to Cosmos address
     const cosmosAddress = convertAddressPrefix(stargazeAddress, STARGAZE_PREFIX, COSMOS_PREFIX);
     
