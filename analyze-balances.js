@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 // Dust threshold - balances below this are considered dust
-const DUST_THRESHOLD = 0.001; // 0.001 ATOM
+const DUST_THRESHOLD = 0.1; // 0.1 ATOM
 
 // Read and parse the CSV file
 const csvData = fs.readFileSync('hub.csv', 'utf8');
