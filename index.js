@@ -12,7 +12,8 @@ const csvWriter = createObjectCsvWriter({
   path: 'output.csv',
   header: [
     { id: 'stargazeAddress', title: 'StargazeAddress' },
-    { id: 'cosmosAddress', title: 'CosmosAddress' }
+    { id: 'cosmosAddress', title: 'CosmosAddress' },
+    { id: 'txCount', title: 'TxCount' }
   ]
 });
 
@@ -37,12 +38,12 @@ function convertAddressPrefix(address, fromPrefix, toPrefix) {
 
 // Process the CSV file
 const results = [];
-fs.createReadStream('wallets.csv')
+fs.createReadStream('sg-6-month-addresses-tx-count.csv')
   .pipe(csv())
   .on('data', (row) => {
-    // Extract the Stargaze address from the row
-    // Assumes the address is in the first column
-    const stargazeAddress = Object.values(row)[0];
+    // Extract the Stargaze address and tx count from the row
+    const stargazeAddress = row.address;
+    const txCount = row.tx_count;
     
     // Convert to Cosmos address
     const cosmosAddress = convertAddressPrefix(stargazeAddress, STARGAZE_PREFIX, COSMOS_PREFIX);
@@ -50,7 +51,8 @@ fs.createReadStream('wallets.csv')
     if (cosmosAddress) {
       results.push({
         stargazeAddress,
-        cosmosAddress
+        cosmosAddress,
+        txCount
       });
     }
   })
