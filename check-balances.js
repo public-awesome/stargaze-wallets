@@ -10,9 +10,52 @@ function createCsvWriter(append = false) {
     header: [
       { id: 'stargazeAddress', title: 'StargazeAddress' },
       { id: 'cosmosAddress', title: 'CosmosAddress' },
-      { id: 'balance', title: 'Balance' }
+      { id: 'balance', title: 'Balance' },
+      { id: 'isStaking', title: 'IsStaking' }
     ],
     append: append
+  });
+}
+
+// Function to check staking status of a Cosmos Hub address
+async function checkStakingStatus(address) {
+  return new Promise((resolve) => {
+    const url = `https://lcd-cosmoshub.keplr.app/cosmos/staking/v1beta1/delegations/${address}`;
+    
+    const req = https.get(url, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        try {
+          if (!data || data.trim() === '') {
+            return resolve('No');
+          }
+          
+          const response = JSON.parse(data);
+          const hasStaking = response.delegation_responses && response.delegation_responses.length > 0;
+          
+          resolve(hasStaking ? 'Yes' : 'No');
+        } catch (error) {
+          console.error(`Error checking staking for ${address}: ${error.message}`);
+          resolve('No'); // Return No in case of errors
+        }
+      });
+    });
+    
+    req.setTimeout(10000, () => {
+      console.log(`Staking request timed out for ${address}`);
+      req.abort();
+      resolve('No');
+    });
+    
+    req.on('error', (error) => {
+      console.error(`Error fetching staking for ${address}: ${error.message}`);
+      resolve('No');
+    });
   });
 }
 
@@ -116,14 +159,16 @@ async function processAddresses() {
       const stargazeAddress = row.StargazeAddress;
       const cosmosAddress = row.CosmosAddress;
       
-      // Check balance
+      // Check balance and staking status
       const balance = await checkBalance(cosmosAddress);
+      const isStaking = await checkStakingStatus(cosmosAddress);
       
       // Always include the address, whether it has a balance or not
       return {
         stargazeAddress,
         cosmosAddress,
-        balance
+        balance,
+        isStaking
       };
     });
     
