@@ -3,6 +3,24 @@ const csv = require('csv-parser');
 const { createObjectCsvWriter } = require('csv-writer');
 const https = require('https');
 
+// Multiple API endpoints for load balancing
+const API_ENDPOINTS = [
+  'https://lcd-cosmoshub.keplr.app',
+  'https://cosmos-rest.publicnode.com',
+  'https://cosmoshub-4-api.polkachu.com',
+  'https://api-cosmoshub-ia.cosmosia.notional.ventures',
+  'https://rest-cosmoshub.ecostake.com'
+];
+
+let currentEndpointIndex = 0;
+
+// Function to get next endpoint in rotation
+function getNextEndpoint() {
+  const endpoint = API_ENDPOINTS[currentEndpointIndex];
+  currentEndpointIndex = (currentEndpointIndex + 1) % API_ENDPOINTS.length;
+  return endpoint;
+}
+
 // CSV writer setup for hub.csv - function to create writer with append option
 function createCsvWriter(append = false) {
   return createObjectCsvWriter({
@@ -20,7 +38,8 @@ function createCsvWriter(append = false) {
 // Function to check staking status of a Cosmos Hub address
 async function checkStakingStatus(address) {
   return new Promise((resolve) => {
-    const url = `https://lcd-cosmoshub.keplr.app/cosmos/staking/v1beta1/delegations/${address}`;
+    const baseUrl = getNextEndpoint();
+    const url = `${baseUrl}/cosmos/staking/v1beta1/delegations/${address}`;
     
     const req = https.get(url, (res) => {
       let data = '';
@@ -62,8 +81,9 @@ async function checkStakingStatus(address) {
 // Function to check balance of a Cosmos Hub address
 async function checkBalance(address) {
   return new Promise((resolve) => {
-    // Use a more reliable public API endpoint
-    const url = `https://lcd-cosmoshub.keplr.app/cosmos/bank/v1beta1/balances/${address}`;
+    // Use endpoint rotation for load balancing
+    const baseUrl = getNextEndpoint();
+    const url = `${baseUrl}/cosmos/bank/v1beta1/balances/${address}`;
     
     const req = https.get(url, (res) => {
       let data = '';
@@ -149,8 +169,8 @@ async function processAddresses() {
   }
   
   let totalProcessed = 0;
-  // Process addresses in smaller batches with delay to avoid rate limiting
-  const batchSize = 5;
+  // Process addresses in larger batches since we're load balancing across multiple endpoints
+  const batchSize = 15; // Increased from 5 to 15 since we have 5 endpoints
   for (let i = 0; i < addresses.length; i += batchSize) {
     const batch = addresses.slice(i, i + batchSize);
     const batchResults = [];
@@ -182,10 +202,10 @@ async function processAddresses() {
     totalProcessed += batchResults.length;
     console.log(`Processed ${totalProcessed} of ${addresses.length} addresses - batch written to hub.csv`);
     
-    // Add a delay between batches to avoid rate limiting
+    // Reduced delay since we're distributing load across multiple endpoints
     if (i + batchSize < addresses.length) {
-      console.log('Waiting 2 seconds before processing next batch...');
-      await sleep(2000);
+      console.log('Waiting 1 second before processing next batch...');
+      await sleep(1000);
     }
   }
   
