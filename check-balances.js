@@ -7,8 +7,6 @@ const https = require('https');
 const API_ENDPOINTS = [
   'https://lcd-cosmoshub.keplr.app',
   'https://cosmos-rest.publicnode.com',
-  'https://cosmoshub-4-api.polkachu.com',
-  'https://api-cosmoshub-ia.cosmosia.notional.ventures',
   'https://rest-cosmoshub.ecostake.com'
 ];
 
@@ -170,7 +168,7 @@ async function processAddresses() {
   
   let totalProcessed = 0;
   // Process addresses in larger batches since we're load balancing across multiple endpoints
-  const batchSize = 15; // Increased from 5 to 15 since we have 5 endpoints
+  const batchSize = 9; // 3 endpoints * 3 requests per endpoint
   for (let i = 0; i < addresses.length; i += batchSize) {
     const batch = addresses.slice(i, i + batchSize);
     const batchResults = [];
